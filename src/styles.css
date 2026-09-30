@@ -4,6 +4,11 @@
   --rail: #3b2a1a;
   --text: #f2f5f3;
   --muted: #a9c2b7;
+  --panel: #0f4a38;
+  --panel-border: #1c6b53;
+  --accent: #f2c14e;
+  --accent-text: #1d1503;
+  --gutter: 16px;
 }
 
 * {
@@ -25,17 +30,58 @@ body {
   overscroll-behavior: none;
 }
 
+a {
+  color: var(--accent);
+}
+
+/* Buttons: big enough to tap, clear focus ring for keyboard use. */
+.btn {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn:hover {
+  background: #14604a;
+}
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+.btn.primary:hover {
+  background: #f7cf6d;
+}
+.btn.on {
+  outline: 2px solid var(--accent);
+}
+.btn:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+/* ---------- Main table screen ---------- */
+
 .screen {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
-    env(safe-area-inset-left);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 .topbar {
-  padding: 12px 16px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px var(--gutter);
 }
 
 .app-name {
@@ -45,19 +91,25 @@ body {
   letter-spacing: 0.04em;
 }
 
+.top-link {
+  font-size: 0.9rem;
+}
+
+/* The area the table lives in. The table fills it as much as its shape allows:
+   tall and narrow on a phone held upright, wide and low on a laptop or a phone on its side. */
 .table-area {
   flex: 1;
+  min-height: 0;
+  container-type: size;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: var(--gutter);
 }
 
 .table {
-  width: 100%;
-  max-width: 420px;
+  width: min(100cqw, 75cqh);
   aspect-ratio: 3 / 4;
-  max-height: 100%;
   border-radius: 50% / 40%;
   background: radial-gradient(ellipse at center, var(--felt-light), var(--felt) 75%);
   border: 10px solid var(--rail);
@@ -67,8 +119,187 @@ body {
   justify-content: center;
 }
 
+@container (aspect-ratio > 1) {
+  .table {
+    width: min(100cqw, 190cqh);
+    aspect-ratio: 19 / 10;
+    border-radius: 999px;
+  }
+}
+
 .table-note {
   margin: 0;
   color: var(--muted);
   font-size: 0.95rem;
+}
+
+/* ---------- Watch page ---------- */
+
+/* Phones held upright: one column that scrolls like a normal page, with the hand log right under the buttons. */
+.watch {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.watch-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px var(--gutter);
+  border-bottom: 1px solid var(--panel-border);
+}
+.watch-header h1 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.back-link {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.watch-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "controls" "log" "extras";
+}
+.watch-controls-block {
+  grid-area: controls;
+}
+.watch-log {
+  grid-area: log;
+}
+.watch-extras {
+  grid-area: extras;
+}
+.watch-controls-block,
+.watch-extras {
+  padding: 12px var(--gutter);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.watch-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.watch-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.seed-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.seed-row {
+  display: flex;
+  gap: 8px;
+}
+.seed-row input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  background: #07281e;
+  color: var(--text);
+  font: inherit;
+}
+.seed-current {
+  font-size: 0.8rem;
+}
+
+.stacks {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.stacks th,
+.stacks td {
+  padding: 4px 6px;
+  text-align: left;
+  border-bottom: 1px solid var(--panel-border);
+}
+.stacks .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.watch-log {
+  min-height: 160px;
+  padding: 12px var(--gutter);
+  background: #07281e;
+  border-top: 1px solid var(--panel-border);
+  border-bottom: 1px solid var(--panel-border);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.logged-hand {
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px dashed var(--panel-border);
+}
+.log-line {
+  margin: 0;
+}
+.log-line.head {
+  color: var(--accent);
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.log-line.street {
+  color: var(--muted);
+  margin-top: 6px;
+}
+.log-line.win {
+  color: #9be7b4;
+  font-weight: 600;
+}
+.log-line.rebuy {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Wide windows (laptops, desktops, tablets on their side) and short landscape phones:
+   controls and chip counts on the left, the hand log on the right. Each side scrolls on its own. */
+@media (min-width: 860px), (max-height: 560px) and (orientation: landscape) {
+  .watch {
+    height: 100%;
+  }
+  .watch-body {
+    min-height: 0;
+    grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas: "controls log" "extras log";
+  }
+  .watch-extras {
+    overflow-y: auto;
+  }
+  .watch-log {
+    overflow-y: auto;
+    border-top: 0;
+    border-bottom: 0;
+    border-left: 1px solid var(--panel-border);
+  }
+}
+
+@media (min-width: 860px) {
+  .watch-log {
+    font-size: 0.95rem;
+  }
 }

@@ -13,6 +13,7 @@ What changed from the spec:
 - **Names:** the spec's Weak-Passive archetype is now Passive Fish, and the skill slider runs Weak ↔ GTO. "Beginner" stays as an archetype.
 - **Speed setting:** Realistic / Fast / Instant, built in Phase 3 with short default pauses. The slower Realistic think times arrive in Phase 7.
 - **More bot testing:** each archetype plays 3 runs of 10,000 hands, instead of the spec's 5,000+.
+- **Desktop first:** you'll mostly play on a small laptop, so the table is designed for desktop windows first and phones second, and it must still work on phones, tablets and large monitors. Keyboard shortcuts are added as an optional extra; the mouse and touch do everything. The spec's "one-handed portrait phone" line is reversed.
 - **Extra bot check:** besides matching stats, stronger archetypes must actually beat weaker ones in simulation. Matching stats alone doesn't prove a bot plays sensibly.
 
 This plan replaces the spec's 'Phased build plan' section. The full spec lives in `SPEC.md` and is the source of truth for what the app does. Everything in it still stands unless a decision in section 5 changes it. Where the two files disagree, the decisions in section 5 win.
@@ -60,21 +61,22 @@ Every phase ends the same way: all checks pass, I commit to git, Vercel publishe
 - **Goal:** prove the whole pipeline end to end before any poker exists.
 - **Built:** project setup, an empty green table screen, app name and icon, home-screen install, and automatic deploy from GitHub to Vercel.
 - **Verified by:** the build succeeds, a first automated test runs, and an install check confirms the app qualifies for 'Add to Home Screen'.
-- **You check:** open the link on your phone, add it to your home screen, and confirm it opens full screen with its own icon.
+- **You check:** open the link, install it (on a phone: add it to your home screen; on a laptop: install it from Edge), and confirm it opens full screen with its own icon.
+- **Update:** the empty table screen was first drawn as a narrow phone shape. It now resizes to fill the window, tall on a phone held upright and wide on a laptop.
 
 ### Phase 2 — Rules engine
 
 - **Goal:** a hand of no-limit hold'em is dealt and settled correctly every time.
-- **Built:** cards and deck, hand ranking, betting rules (min-raise, all-in reopening rules), side pots, split pots, blinds and button movement, and replayable shuffles.
-- **Verified by:** hundreds of rule tests, including tricky side-pot cases. A 10,000-hand run with random bots checks that chips are never created or lost and no illegal action is ever allowed.
+- **Built:** cards and deck, a 7-card hand evaluator, betting rules (min-raise, all-in reopening rules), side pots, split pots with the odd chip, blinds and a moving button with dead-button handling, and replayable shuffles. A "fair play" view, so bots only ever see their own cards. Simple placeholder bots (not the real ones) for testing.
+- **Verified by:** more than 200 automated rule checks, including tricky side-pot cases, an exact check of all 2,598,960 five-card hands against the known counts, and a cross-check of the evaluator against a second, independently written one. A 10,000-hand run with random play, random stack sizes and players coming and going checks that chips are never created or lost and no illegal action is ever allowed, and that every pot goes to the right winner. Browser checks run the watch page at all eight screen sizes.
 - **You check:** a 'watch' page that auto-plays hands between simple bots with a readable text log. Spot-check a few pots and winners.
 
 ### Phase 3 — Playable table
 
-- **Goal:** you can play real hands on your phone.
-- **Built:** the table layout, your cards, Fold / Check / Call / Bet / Raise buttons, the bet slider with 1/3, 1/2, 2/3, pot, and all-in buttons, stack-depth setting, bankroll, and rebuy. The speed setting (Realistic / Fast / Instant) is built here, with short default pauses of roughly 1-3 seconds, longer for big decisions. Opponents are still placeholder bots that mostly call.
-- **Verified by:** a phone-sized automated browser plays 20 hands by tapping, and tests confirm every button offers only legal amounts and the speed setting changes the pauses.
-- **You check:** play 20+ hands one-handed. Are the buttons easy to reach? Are the amounts right? Does rebuy work?
+- **Goal:** you can play real hands on your laptop or your phone.
+- **Built:** the table layout with a wide desktop layout and a tall phone layout (the game fits the window with no scrolling during a hand, down to 1280×630), your cards, Fold / Check / Call / Bet / Raise buttons, the optional keyboard shortcuts (F, C, R and the keys in decision 11), the bet slider with 1/3, 1/2, 2/3, pot, and all-in buttons, stack-depth setting, bankroll, and rebuy. The speed setting (Realistic / Fast / Instant) is built here, with short default pauses of roughly 1-3 seconds, longer for big decisions. Opponents are still placeholder bots that mostly call.
+- **Verified by:** automated browsers at phone, tablet and laptop sizes play 20 hands, once by clicking and tapping and once using only the keyboard, and tests confirm every button offers only legal amounts and the speed setting changes the pauses.
+- **You check:** play 20+ hands on your laptop, with the mouse and then with the keyboard, then a few on your phone. Are the buttons easy to reach? Do the shortcuts feel right? Are the amounts right? Does rebuy work?
 
 ### Phase 4 — Bot brain, preflop
 
@@ -141,6 +143,10 @@ An archetype passes only if its stats land inside its target band (the ranges in
 3. **Stat definitions** match standard poker trackers. VPIP excludes checking your option in the big blind. PFR counts any preflop raise. 3-bet % is re-raises as a share of chances to re-raise. AF = postflop (bets + raises) ÷ calls.
 4. **Report:** a table of every stat per archetype, marked pass or fail, saved in the project and included in the phase note.
 
+**Screen sizes and browsers**
+
+Every screen-layout check runs in a real browser at eight sizes: phone portrait (412×915), phone landscape (915×412), tablet portrait (820×1180), tablet landscape (1180×820), small laptop (1280×630, your laptop at 150% zoom), mid laptop (1366×650), your laptop at 100% zoom (1920×950) and a large monitor (2560×1440). A check fails if anything scrolls sideways, is cut off, or overlaps. From Phase 3 on, the game screen must fit without scrolling during a hand, and there are extra tests that play hands using only the keyboard. These automated checks run in Chromium (Chrome and Edge's engine). Safari and Firefox are not run automatically here, so for iPhone and iPad I'll give you a short list of things to look at by hand.
+
 **What counts as passing**
 
 | Check | Passes when |
@@ -172,6 +178,8 @@ These were settled before Phase 1. They override anything earlier in this file o
 | 7 | **Naming:** "Beginner" stays as a bot type. The low end of the skill slider is **Weak** (so the slider is Weak ↔ GTO). The spec's "Weak-Passive" archetype is renamed **Passive Fish**, with the same stat targets. |
 | 8 | **Think times:** the speed setting (Realistic / Fast / Instant) is built from Phase 3. The default is short pauses of roughly 1-3 seconds, longer for big decisions. Realistic is the slower opt-in mode, wired in during Phase 7. |
 | 9 | **Scope of the first round:** Phases 1-5, then the Phase 6 table presets only. Phases 7-10 come after you've played it. |
+| 10 | **Desktop first, every device supported.** The main device is a small laptop (Dell XPS 13 9315, about 1920×1200). The layout is designed for desktop windows first, from 1280×630 (that laptop at 150% zoom) up to large monitors, and must also work well on phones (portrait and landscape) and tablets. One layout that scales, not separate apps. Nothing needs hover, and buttons stay big enough to tap. |
+| 11 | **Keyboard shortcuts (optional, Phase 3):** **F** fold, **C** check/call, **R** raise. After R: **Enter** confirms, **↑/↓** adjust the amount, **1-5** pick the quick sizes (1/3, 1/2, 2/3, pot, all-in), **Esc** cancels. They work only on your turn, the keys are shown on the buttons on desktop, and every action can still be done with the mouse or touch. |
 
 ### Still open
 

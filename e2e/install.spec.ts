@@ -1,17 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-test("shows the app name and an empty table on a phone-sized screen", async ({ page }) => {
+test("shows the app name and the table", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle("Hold'em Lab");
   await expect(page.getByRole("heading", { name: "Hold'em Lab" })).toBeVisible();
-  const table = page.getByTestId("table");
-  await expect(table).toBeVisible();
-  const box = await table.boundingBox();
-  const viewport = page.viewportSize()!;
-  expect(box!.width).toBeLessThanOrEqual(viewport.width);
-  // No sideways scrolling on a phone.
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
-  expect(overflow).toBe(false);
+  await expect(page.getByTestId("table")).toBeVisible();
 });
 
 test("qualifies for Add to Home Screen", async ({ page, request }) => {

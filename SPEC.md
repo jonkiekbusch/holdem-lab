@@ -6,6 +6,7 @@
 > - **Speed setting:** **Realistic / Fast / Instant** instead of 1x / 2x / 4x / instant. The default is short pauses of roughly 1-3 seconds. Realistic is the slower opt-in mode.
 > - **Phases:** the spec's six phases are replaced by the ten phases in `Build Plan.md`.
 > - **Bot validation volume:** the plan runs 3 x 10,000 hands per archetype instead of the spec's 5,000+.
+> - **Devices:** desktop first, every device supported. The spec says the app is designed for one-handed portrait phone use; now the main device is a small laptop, with phones and tablets fully supported too. Keyboard shortcuts (F fold, C check/call, R raise) are an optional extra. See decisions 10 and 11 in `Build Plan.md`.
 > - **Opponent adaptation:** bots that notice your habits are not in v1. It is listed as a possible later phase.
 
 # Poker Practice App — Spec & Build Plan
