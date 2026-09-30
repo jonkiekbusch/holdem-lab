@@ -42,12 +42,12 @@ export function newWatchGame(seed: string): WatchGame {
 }
 
 /** Plays one complete hand. Busted players rebuy before the next one. Returns null if nobody can play. */
-export function playWatchHand(game: WatchGame): { hand: HandState; rebuys: string[] } | null {
+export function playWatchHand(game: WatchGame): { hand: HandState; rebuys: { name: string; amount: number }[] } | null {
   // Busted players rebuy, like a real game.
-  const rebuys: string[] = [];
+  const rebuys: { name: string; amount: number }[] = [];
   const seats = game.table.seats.map((s) => {
     if (s && s.stack === 0) {
-      rebuys.push(s.name);
+      rebuys.push({ name: s.name, amount: REBUY_STACK });
       return { ...s, stack: REBUY_STACK };
     }
     return s;

@@ -68,7 +68,11 @@ Every phase ends the same way: all checks pass, I commit to git, Vercel publishe
 
 - **Goal:** a hand of no-limit hold'em is dealt and settled correctly every time.
 - **Built:** cards and deck, a 7-card hand evaluator, betting rules (min-raise, all-in reopening rules), side pots, split pots with the odd chip, blinds and a moving button with dead-button handling, and replayable shuffles. A "fair play" view, so bots only ever see their own cards. Simple placeholder bots (not the real ones) for testing.
-- **Verified by:** more than 200 automated rule checks, including tricky side-pot cases, an exact check of all 2,598,960 five-card hands against the known counts, and a cross-check of the evaluator against a second, independently written one. A 10,000-hand run with random play, random stack sizes and players coming and going checks that chips are never created or lost and no illegal action is ever allowed, and that every pot goes to the right winner. Browser checks run the watch page at all eight screen sizes.
+- **Rules you approved while reviewing this phase:**
+  - **Pot display:** the pot shown on screen is the contested pot. Any part of a bet that nobody can call (everyone else folded or all-in for less) is left out of the pot and shown separately as "uncalled", then returned at the end. The Phase 3 table screen uses this.
+  - **Small leftover counts as all-in:** a bet or raise that would leave fewer than 2 big blinds behind (fewer than 4 chips at 1/2 blinds) becomes an all-in for the whole stack. A raise that leaves exactly 4 or more chips behind is left alone. This applies to you and the bots, and the Phase 3 bet slider will snap to it.
+  - **Hand log:** a rebuy is printed right under the header of the hand it comes before.
+- **Verified by:** more than 250 automated rule checks, including tricky side-pot cases, an exact check of all 2,598,960 five-card hands against the known counts, and a cross-check of the evaluator against a second, independently written one. A 10,000-hand run with random play, random stack sizes and players coming and going checks that chips are never created or lost and no illegal action is ever allowed, and that every pot goes to the right winner. Browser checks run the watch page at all eight screen sizes.
 - **You check:** a 'watch' page that auto-plays hands between simple bots with a readable text log. Spot-check a few pots and winners.
 
 ### Phase 3 — Playable table

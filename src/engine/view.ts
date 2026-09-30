@@ -2,7 +2,7 @@
 // so they cannot see other players' cards or the deck. A test checks that.
 
 import type { Card } from "./cards.ts";
-import { legalActions, totalPot, type HandEvent, type HandState, type LegalActions, type Street } from "./hand.ts";
+import { contestedPot, legalActions, type HandEvent, type HandState, type LegalActions, type Street } from "./hand.ts";
 
 export interface PublicPlayer {
   seat: number;
@@ -20,6 +20,7 @@ export interface PlayerView {
   hole: readonly [Card, Card];
   board: readonly Card[];
   street: Street;
+  /** The pot being played for (excludes any bet nobody can call). */
   pot: number;
   currentBet: number;
   lastRaiseSize: number;
@@ -45,7 +46,7 @@ export function viewFor(state: HandState, seat: number): PlayerView {
     hole: me.hole,
     board: state.board.slice(),
     street: state.street,
-    pot: totalPot(state),
+    pot: contestedPot(state),
     currentBet: state.currentBet,
     lastRaiseSize: state.lastRaiseSize,
     toAct: state.toAct,

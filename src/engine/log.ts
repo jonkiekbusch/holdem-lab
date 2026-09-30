@@ -2,11 +2,13 @@
 
 import { cardPretty, type Card } from "./cards.ts";
 import { describeScore } from "./evaluator.ts";
-import type { HandState } from "./hand.ts";
+import { potAfterEvent, type HandState } from "./hand.ts";
 
 const cards = (list: readonly Card[]): string => list.map(cardPretty).join(" ");
 
 export interface FormatOptions {
+  /** Players who rebought just before this hand; printed right under the hand's header line. */
+  rebuys?: readonly { name: string; amount: number }[];
   /** Show every player's hole cards at the start (for the watch page; a real game never does). */
   showAllHoleCards?: boolean;
 }
@@ -14,14 +16,16 @@ export interface FormatOptions {
 export function formatHand(state: HandState, options: FormatOptions = {}): string[] {
   const name = (seat: number): string => state.config.seats[seat]?.name ?? `Seat ${seat + 1}`;
   const lines: string[] = [];
-  let pot = 0;
   const potNames = (index: number, total: number): string => (total === 1 ? "the pot" : index === 0 ? "the main pot" : `side pot ${index}`);
-
-  for (const e of state.events) {
+  for (let index = 0; index < state.events.length; index++) {
+    const e = state.events[index];
     switch (e.type) {
       case "hand_start": {
         const sb = e.smallBlindSeat === null ? "no small blind (dead)" : `small blind ${name(e.smallBlindSeat)}`;
         lines.push(`Hand #${e.handNumber} · button ${name(e.buttonSeat)} · ${sb} · big blind ${name(e.bigBlindSeat)} · ${state.config.smallBlind}/${state.config.bigBlind}`);
+        if (options.rebuys && options.rebuys.length > 0) {
+          lines.push(`↻ Rebuy before this hand: ${options.rebuys.map((r) => `${r.name} rebought ${r.amount}`).join(", ")}`);
+        }
         lines.push(
           "Stacks: " +
             state.players
@@ -41,14 +45,15 @@ export function formatHand(state: HandState, options: FormatOptions = {}): strin
         break;
       }
       case "post_blind":
-        pot += e.amount;
         lines.push(`${name(e.seat)} posts the ${e.blind} blind ${e.amount}${e.allIn ? " (all-in)" : ""}`);
         break;
-      case "deal_board":
-        lines.push(`— ${e.street[0].toUpperCase()}${e.street.slice(1)}: ${cards(e.cards)}${e.street === "flop" ? "" : ` (board ${cards(state.board.slice(0, e.street === "turn" ? 4 : 5))})`} · pot ${pot} —`);
+      case "deal_board": {
+        const { contested, uncalled } = potAfterEvent(state.events, index);
+        const potText = uncalled > 0 ? `pot ${contested} (+${uncalled} uncalled, returned at the end)` : `pot ${contested}`;
+        lines.push(`— ${e.street[0].toUpperCase()}${e.street.slice(1)}: ${cards(e.cards)}${e.street === "flop" ? "" : ` (board ${cards(state.board.slice(0, e.street === "turn" ? 4 : 5))})`} · ${potText} —`);
         break;
+      }
       case "action": {
-        pot += e.amount;
         const tail = e.allIn ? " (all-in)" : "";
         if (e.action === "fold") lines.push(`${name(e.seat)} folds`);
         else if (e.action === "check") lines.push(`${name(e.seat)} checks`);
@@ -58,7 +63,6 @@ export function formatHand(state: HandState, options: FormatOptions = {}): strin
         break;
       }
       case "uncalled_return":
-        pot -= e.amount;
         lines.push(`Uncalled bet of ${e.amount} returned to ${name(e.seat)}`);
         break;
       case "show":

@@ -145,6 +145,12 @@ export interface LegalActions {
   stack: number;
 }
 
+/**
+ * A bet or raise that would leave fewer than this many big blinds behind counts as all-in.
+ * (Chips that small can't make a real bet later, so pretending the player still has a stack is misleading.)
+ */
+export const ALL_IN_SNAP_BIG_BLINDS = 2;
+
 export class IllegalActionError extends Error {
   constructor(message: string) {
     super(message);
@@ -271,6 +277,51 @@ export function totalPot(s: HandState): number {
   return total;
 }
 
+/**
+ * The part of the biggest bet that nobody can call any more: everyone else has folded or is all-in
+ * for less. It is returned to its owner at the end of the hand, so it is not part of the pot
+ * anyone is playing for. Null when there is no such excess.
+ */
+export function uncalledBet(s: HandState): { seat: number; amount: number } | null {
+  if (s.street === "complete") return null;
+  const inHand = s.players.filter((p): p is PlayerState => p !== null);
+  const sorted = [...inHand].sort((a, b) => b.committed - a.committed);
+  if (sorted.length < 2 || sorted[0].committed === sorted[1].committed) return null;
+  const top = sorted[0];
+  const someoneCanStillCall = inHand.some((p) => p.seat !== top.seat && !p.folded && !p.allIn);
+  if (someoneCanStillCall) return null;
+  return { seat: top.seat, amount: top.committed - sorted[1].committed };
+}
+
+/**
+ * The pot after a given step of a hand, for showing the hand step by step.
+ * While a betting round is open, every chip in the middle counts (any bet might still be called).
+ * When a round closes (the moment the next street is dealt), any excess that nobody could call is left out.
+ */
+export function potAfterEvent(events: readonly HandEvent[], index: number): { contested: number; uncalled: number } {
+  const committed = new Map<number, number>();
+  const add = (seat: number, amount: number): void => {
+    committed.set(seat, (committed.get(seat) ?? 0) + amount);
+  };
+  for (let i = 0; i <= index && i < events.length; i++) {
+    const e = events[i];
+    if (e.type === "post_blind" || e.type === "action") add(e.seat, e.amount);
+    else if (e.type === "uncalled_return") add(e.seat, -e.amount);
+  }
+  const total = [...committed.values()].reduce((a, b) => a + b, 0);
+  let uncalled = 0;
+  if (events[index]?.type === "deal_board") {
+    const sorted = [...committed.values()].sort((a, b) => b - a);
+    if (sorted.length >= 2 && sorted[0] > sorted[1]) uncalled = sorted[0] - sorted[1];
+  }
+  return { contested: total - uncalled, uncalled };
+}
+
+/** The pot players are actually contesting: everything in the middle minus any uncalled excess. Use this for display. */
+export function contestedPot(s: HandState): number {
+  return totalPot(s) - (uncalledBet(s)?.amount ?? 0);
+}
+
 export function legalActions(s: HandState): LegalActions | null {
   if (s.toAct < 0) return null;
   const p = s.players[s.toAct]!;
@@ -339,11 +390,14 @@ export function applyAction(state: HandState, action: Action): HandState {
       break;
     }
     case "raise": {
-      const to = action.to;
+      let to = action.to;
       if (to === undefined || !Number.isInteger(to)) throw new IllegalActionError("A raise needs a whole-number total");
       if (!legal.canRaise) throw new IllegalActionError("Raising is not allowed here");
       if (to < legal.minRaiseTo) throw new IllegalActionError(`Raise to at least ${legal.minRaiseTo}`);
       if (to > legal.maxRaiseTo) throw new IllegalActionError(`Raise to at most ${legal.maxRaiseTo}`);
+      // Leaving only a sliver behind? Then it is an all-in.
+      const behind = legal.maxRaiseTo - to;
+      if (behind > 0 && behind < ALL_IN_SNAP_BIG_BLINDS * s.config.bigBlind) to = legal.maxRaiseTo;
       const kind = s.currentBet === 0 ? "bet" : "raise";
       const full = isFull(to);
       const amount = to - p.bet;

@@ -6,7 +6,6 @@ interface LoggedHand {
   number: number;
   seed: string;
   lines: string[];
-  rebuys: string[];
 }
 
 const MAX_LOGGED = 40;
@@ -27,8 +26,7 @@ export function WatchPage() {
       made.unshift({
         number: played.hand.config.handNumber,
         seed: played.hand.config.seed,
-        lines: formatHand(played.hand, { showAllHoleCards: true }),
-        rebuys: played.rebuys,
+        lines: formatHand(played.hand, { showAllHoleCards: true, rebuys: played.rebuys }),
       });
     }
     setHands((prev) => [...made, ...prev].slice(0, MAX_LOGGED));
@@ -84,9 +82,8 @@ export function WatchPage() {
           {hands.length === 0 && <p class="watch-note">Press “Play 1 hand” to deal the first hand.</p>}
           {hands.map((h) => (
             <article class="logged-hand" key={h.seed} data-testid="logged-hand">
-              {h.rebuys.length > 0 && <p class="log-line rebuy">{h.rebuys.join(", ")} rebought for 200</p>}
               {h.lines.map((line, i) => (
-                <p class={`log-line${line.startsWith("Hand #") ? " head" : line.startsWith("—") ? " street" : line.includes(" wins ") || line.includes(" split ") ? " win" : ""}`} key={i}>
+                <p class={`log-line${line.startsWith("Hand #") ? " head" : line.startsWith("↻") ? " rebuy" : line.startsWith("—") ? " street" : line.includes(" wins ") || line.includes(" split ") ? " win" : ""}`} key={i}>
                   {line}
                 </p>
               ))}

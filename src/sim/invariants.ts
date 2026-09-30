@@ -1,7 +1,7 @@
 // Checks that must hold after every single action of every hand.
 // Used by the random-hands test now and by the bot simulator later.
 
-import { legalActions, totalPot, type HandState } from "../engine/hand.ts";
+import { legalActions, potAfterEvent, totalPot, type HandState } from "../engine/hand.ts";
 
 export function checkInvariants(state: HandState, totalChips: number): void {
   const fail = (msg: string): never => {
@@ -51,6 +51,12 @@ export function checkInvariants(state: HandState, totalChips: number): void {
       paid += pot.amount;
     }
     if (paid !== committed) fail(`pots total ${paid} but ${committed} was committed`);
+    // The pot shown step by step never exceeds what is finally paid out, and ends equal to it.
+    state.events.forEach((e, i) => {
+      if (e.type === "deal_board" && potAfterEvent(state.events, i).contested > paid) fail("pot shown on a street exceeds the final pot");
+    });
+    const end = potAfterEvent(state.events, state.events.length - 1);
+    if (end.contested !== paid || end.uncalled !== 0) fail(`final pot shown ${end.contested}, paid ${paid}`);
     const net = r.net.reduce<number>((a, b) => a + (b ?? 0), 0);
     if (net !== 0) fail(`net results sum to ${net}`);
   } else {

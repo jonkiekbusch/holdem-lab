@@ -70,11 +70,29 @@ test.describe("watch page", () => {
     await expect(page.getByTestId("logged-hand")).toHaveCount(10);
     await expect(page.getByTestId("logged-hand").first()).toContainText("Hand #10");
     // Nobody rebuys unless someone goes broke, so count rebuys into the expected total.
-    // A rebuy line looks like "Ben, Fay rebought for 200": one rebuy per name.
+    // A rebuy line looks like "↻ Rebuy before this hand: Ben rebought 200, Fay rebought 200".
     const rebuyLines = await page.locator(".log-line.rebuy").allTextContents();
-    const rebuys = rebuyLines.reduce((n, line) => n + line.replace(" rebought for 200", "").split(", ").length, 0);
+    const rebuys = rebuyLines.reduce((n, line) => n + (line.match(/rebought 200/g)?.length ?? 0), 0);
     expect(await total()).toBe(before + rebuys * 200);
     await noSidewaysScroll(page);
+  });
+
+  test("a rebuy line sits inside the hand it comes before, right under that hand's header", async ({ page }) => {
+    await page.goto("/#/watch");
+    await page.getByRole("button", { name: "Play 10 hands" }).click();
+    const hands = page.getByTestId("logged-hand");
+    let found = 0;
+    for (let i = 0; i < (await hands.count()); i++) {
+      const lines = await hands.nth(i).locator(".log-line").allTextContents();
+      const at = lines.findIndex((l) => l.startsWith("↻"));
+      if (at >= 0) {
+        found++;
+        expect(at).toBe(1);
+        expect(lines[0]).toMatch(/^Hand #/);
+        expect(lines[2]).toMatch(/^Stacks:/);
+      }
+    }
+    expect(found).toBeGreaterThan(0);
   });
 
   test("the same seed deals the same hand, and a different seed does not", async ({ page }) => {
