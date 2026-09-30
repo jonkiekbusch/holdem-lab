@@ -1,0 +1,74 @@
+:root {
+  --felt: #0b3d2e;
+  --felt-light: #14604a;
+  --rail: #3b2a1a;
+  --text: #f2f5f3;
+  --muted: #a9c2b7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--felt);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+.screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}
+
+.topbar {
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.app-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.table-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.table {
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 3 / 4;
+  max-height: 100%;
+  border-radius: 50% / 40%;
+  background: radial-gradient(ellipse at center, var(--felt-light), var(--felt) 75%);
+  border: 10px solid var(--rail);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.table-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
