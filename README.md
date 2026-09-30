@@ -23,3 +23,5 @@ Edit `app.config.ts` (`APP_NAME`, `APP_SHORT_NAME`). The page title, install nam
 ## Hosting
 
 Vercel deploys every push from GitHub (it detects Vite automatically). Each commit gets its own preview link under **Deployments** in Vercel.
+
+Each phase is developed on the branch `claude/happy-carson-emf5b5`. `main` stays untouched until the first version is approved.
