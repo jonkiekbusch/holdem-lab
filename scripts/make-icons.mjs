@@ -7,7 +7,13 @@ const out = (name) => new URL(`../public/${name}`, import.meta.url).pathname;
 
 await sharp(svg).resize(192, 192).png().toFile(out("pwa-192x192.png"));
 await sharp(svg).resize(512, 512).png().toFile(out("pwa-512x512.png"));
-await sharp(svg).resize(180, 180).png().toFile(out("apple-touch-icon.png"));
+// iPhone icon: must be a full square with no transparent corners (iOS rounds it itself
+// and paints transparent areas black).
+await sharp(svg)
+  .resize(180, 180)
+  .flatten({ background: "#0b3d2e" })
+  .png()
+  .toFile(out("apple-touch-icon.png"));
 
 // Maskable icon: the artwork sits inside the central safe zone on a full-bleed background.
 const inner = await sharp(svg).resize(360, 360).png().toBuffer();
