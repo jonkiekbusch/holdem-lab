@@ -4,7 +4,7 @@ Sep 30, 2026 · @Jon Kiekbusch
 
 ## Overview
 
-The build is 10 small phases. Each one ends with something you can open on your phone, a set of automated checks that must pass, a git commit, and a new Vercel link. A playable game against believable bots arrives at Phase 5. Phases 6–10 add the controls, human realism, HUD, hand history, and polish. An optional Phase 11 (bots that adapt to you) is listed but not planned for v1.
+The build is 10 small phases. Each one ends with something you can open on your phone, a set of automated checks that must pass, a git commit, and a new Vercel link. A playable game against believable bots arrives at Phase 5. Phases 6–10 add the controls, human realism, HUD, hand history, and polish. Two optional later phases are listed but not planned for v1: Phase 11 (bots that adapt to you) and Phase 12 (decision review with pot odds and equity).
 
 What changed from the spec:
 
@@ -78,9 +78,16 @@ Every phase ends the same way: all checks pass, I commit to git, Vercel publishe
 ### Phase 3 — Playable table
 
 - **Goal:** you can play real hands on your laptop or your phone.
-- **Built:** the table layout with a wide desktop layout and a tall phone layout (the game fits the window with no scrolling during a hand, down to 1280×630), your cards, Fold / Check / Call / Bet / Raise buttons, the optional keyboard shortcuts (F, C, R and the keys in decision 11), the bet slider with 1/3, 1/2, 2/3, pot, and all-in buttons, stack-depth setting, bankroll, and rebuy. The speed setting (Realistic / Fast / Instant) is built here, with short default pauses of roughly 1-3 seconds, longer for big decisions. Opponents are still placeholder bots that mostly call.
-- **Verified by:** automated browsers at phone, tablet and laptop sizes play 20 hands, once by clicking and tapping and once using only the keyboard, and tests confirm every button offers only legal amounts and the speed setting changes the pauses.
-- **You check:** play 20+ hands on your laptop, with the mouse and then with the keyboard, then a few on your phone. Are the buttons easy to reach? Do the shortcuts feel right? Are the amounts right? Does rebuy work?
+- **Built:**
+  - **Table:** a wide desktop layout (table on the left, your controls and a live hand log in a side panel) and a tall phone layout (table on top, controls in thumb reach). The game fits the window with no scrolling during a hand, down to 1280×630. Four-color cards (spades black, hearts red, diamonds blue, clubs green), dealer button and blind badges, a "thinking" ring on the bot that is deciding, the contested pot with uncalled bets shown separately, and each seat's last action and winnings.
+  - **Your actions:** Fold / Check / Call / Bet / Raise buttons, a bet slider with a typed amount, and five quick sizes (after the flop: 1/3, 1/2, 2/3 pot, pot, all-in; before the flop: 2.5x, 3x, 4x, pot, all-in). Raises that would leave under 2 big blinds behind become all-in.
+  - **Keyboard shortcuts (optional):** F fold, C check/call, R raise, then Enter / ↑ ↓ / 1-5 / Esc, and N for the next hand. Folding when checking is free asks you to press Fold again.
+  - **Money:** a play-money bankroll (10,000 to start) saved on the device, buy-ins and rebuys from it, a session profit/loss figure, and a reset. Stack depth 40 / 100 / 200bb (default 100bb), applied from the next hand.
+  - **Speed setting:** Realistic / Fast / Instant. **Fast is the default**: bots pause roughly 1-3 seconds (longer for big decisions), so hands never drag. Realistic is a slower opt-in for now, and Phase 7 gives it the human-like think times. Instant has no pauses.
+  - **Opponents:** placeholder bots that mostly call (the real personalities arrive in Phases 4 and 5).
+  - **Records:** every finished hand is kept in memory as a complete record (see "Decision feedback" below).
+- **Verified by:** about 360 automated unit checks (including every button offering only legal amounts across thousands of real decisions, the keyboard mapping, pacing, saving, bankroll and rebuys), and browser checks at all eight screen sizes that play 20 hands by clicking and tapping and 20 hands using only the keyboard, check that nothing scrolls, overlaps or is cut off, and cover rebuys, stack depth, speed and the hand log.
+- **You check:** play 20+ hands on your laptop, with the mouse and then with the keyboard, then a few on your phone. Are the buttons easy to reach? Do the shortcuts feel right? Are the amounts right? Does rebuy work? Do the pauses feel too slow or too fast?
 
 ### Phase 4 — Bot brain, preflop
 
@@ -136,6 +143,13 @@ Every phase ends the same way: all checks pass, I commit to git, Vercel publishe
 - **Goal:** bots that notice your habits, such as folding to every 3-bet, and adjust.
 - **Status:** not planned and not built. It's listed so it isn't forgotten. It would be a large extra system on top of the bot engine, so it would need its own design discussion before any work starts.
 
+### Phase 12 — Decision review and equity coach (optional, not in v1)
+
+- **Goal:** help you learn from your own play: pot odds on each decision, your equity against a range, and a review of your hands that flags mistakes (for example, a fold that got the right price to call).
+- **Status:** not planned and not built. The spec lists the equity coach and decision feedback as out of scope for v1 and "easy to add later".
+- **Where it fits:** after Phase 9, because the review reads your saved hand history. The equity part uses the Monte Carlo equity calculation the spec already puts in the rules engine, and pot odds are plain arithmetic (what you must call divided by the pot after your call). A small early option, if you want it sooner: show the pot odds on the Call button during play. That would be a few lines and could be added at any time.
+- **What Phase 3 already records so this is easy:** every finished hand is kept as a complete record (up to the last 500, in memory for now; saving them to the device is Phase 9). A record holds the table (who sat where, stacks, blinds, button), every card dealt (your cards, every opponent's cards, the whole board), every action in order with its amount, the result, and how each opponent was set up to play. From that, the pot, the price of a call, your hand, your position and what you chose can be rebuilt at every decision you faced, and a test proves it. What is not recorded: how long you took to decide.
+
 ## 4. Bot validation
 
 An archetype passes only if its stats land inside its target band (the ranges in the spec's archetype table) across repeated runs, with enough hands that luck can't explain the result.
@@ -185,14 +199,17 @@ These were settled before Phase 1. They override anything earlier in this file o
 | 10 | **Desktop first, every device supported.** The main device is a small laptop (Dell XPS 13 9315, about 1920×1200). The layout is designed for desktop windows first, from 1280×630 (that laptop at 150% zoom) up to large monitors, and must also work well on phones (portrait and landscape) and tablets. One layout that scales, not separate apps. Nothing needs hover, and buttons stay big enough to tap. |
 | 11 | **Keyboard shortcuts (optional, Phase 3):** **F** fold, **C** check/call, **R** raise. After R: **Enter** confirms, **↑/↓** adjust the amount, **1-5** pick the quick sizes (1/3, 1/2, 2/3, pot, all-in), **Esc** cancels. They work only on your turn, the keys are shown on the buttons on desktop, and every action can still be done with the mouse or touch. |
 
+| 12 | **Card style:** four-color deck. |
+| 13 | **Blinds and stacks:** 1/2 blinds; stack depths 40 / 100 / 200bb; default 100bb. |
+| 14 | **Near-all-in cutoff:** a bet or raise that leaves fewer than 2 big blinds behind counts as all-in. |
+| 15 | **Bankroll (my default, change it if you like):** you start with 10,000 chips. A buy-in or rebuy comes out of it, up to your chosen stack depth. If you go broke and the bankroll is empty, you can reset it to 10,000. Changing the stack depth cashes you out and sits you down again at the new depth from the next hand. The bankroll and settings are saved on the device; a hand you leave unfinished is simply not counted. |
+
 ### Still open
 
 I'll ask again when we reach the phase that needs each one.
 
 | Decision | My recommendation | Needed by |
 | --- | --- | --- |
-| Blinds and stack depths | 1/2 blinds with 40 / 100 / 200bb stacks, default 100bb (the spec says the same) | Before Phase 3 |
-| Card style | Four-color deck (suits in different colors, easier to read on a small screen) | Before Phase 3 |
 | Default table preset | 'Realistic Online': a mix of regs and recreational players | Before Phase 6 |
 | Longest tank in Realistic mode | Capped near 15 seconds | Before Phase 7 |
 | Busted bots: rebuy or replaced by a new player? | Mostly rebuy, occasionally replaced by a new face, like a real table | Before Phase 7 |

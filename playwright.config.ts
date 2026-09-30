@@ -32,7 +32,7 @@ export default defineConfig({
   projects: sizes.map((s) => ({
     name: s.name,
     use: s.use,
-    testMatch: installSizes.has(s.name) ? /.*\.spec\.ts/ : /layout\.spec\.ts/,
+    testMatch: installSizes.has(s.name) ? /.*\.spec\.ts/ : /(layout|game)\.spec\.ts/,
   })),
   webServer: {
     command: "npm run build && npm run preview -- --port 4173 --strictPort",

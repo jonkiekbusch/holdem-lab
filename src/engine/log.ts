@@ -7,6 +7,10 @@ import { potAfterEvent, type HandState } from "./hand.ts";
 const cards = (list: readonly Card[]): string => list.map(cardPretty).join(" ");
 
 export interface FormatOptions {
+  /** Only print the first N events (for showing a hand as it unfolds). */
+  upTo?: number;
+  /** Seat that is the reader ("You"): verbs are written as "You call", "You win". */
+  youSeat?: number;
   /** Players who rebought just before this hand; printed right under the hand's header line. */
   rebuys?: readonly { name: string; amount: number }[];
   /** Show every player's hole cards at the start (for the watch page; a real game never does). */
@@ -15,9 +19,13 @@ export interface FormatOptions {
 
 export function formatHand(state: HandState, options: FormatOptions = {}): string[] {
   const name = (seat: number): string => state.config.seats[seat]?.name ?? `Seat ${seat + 1}`;
+  const you = options.youSeat;
+  /** "Ann calls" / "You call" */
+  const did = (seat: number, third: string, base: string): string => `${name(seat)} ${seat === you ? base : third}`;
   const lines: string[] = [];
   const potNames = (index: number, total: number): string => (total === 1 ? "the pot" : index === 0 ? "the main pot" : `side pot ${index}`);
-  for (let index = 0; index < state.events.length; index++) {
+  const count = Math.min(options.upTo ?? state.events.length, state.events.length);
+  for (let index = 0; index < count; index++) {
     const e = state.events[index];
     switch (e.type) {
       case "hand_start": {
@@ -45,7 +53,7 @@ export function formatHand(state: HandState, options: FormatOptions = {}): strin
         break;
       }
       case "post_blind":
-        lines.push(`${name(e.seat)} posts the ${e.blind} blind ${e.amount}${e.allIn ? " (all-in)" : ""}`);
+        lines.push(`${did(e.seat, "posts", "post")} the ${e.blind} blind ${e.amount}${e.allIn ? " (all-in)" : ""}`);
         break;
       case "deal_board": {
         const { contested, uncalled } = potAfterEvent(state.events, index);
@@ -55,28 +63,28 @@ export function formatHand(state: HandState, options: FormatOptions = {}): strin
       }
       case "action": {
         const tail = e.allIn ? " (all-in)" : "";
-        if (e.action === "fold") lines.push(`${name(e.seat)} folds`);
-        else if (e.action === "check") lines.push(`${name(e.seat)} checks`);
-        else if (e.action === "call") lines.push(`${name(e.seat)} calls ${e.amount}${tail}`);
-        else if (e.action === "bet") lines.push(`${name(e.seat)} bets ${e.amount}${tail}`);
-        else lines.push(`${name(e.seat)} raises to ${e.to}${tail}`);
+        if (e.action === "fold") lines.push(`${did(e.seat, "folds", "fold")}`);
+        else if (e.action === "check") lines.push(`${did(e.seat, "checks", "check")}`);
+        else if (e.action === "call") lines.push(`${did(e.seat, "calls", "call")} ${e.amount}${tail}`);
+        else if (e.action === "bet") lines.push(`${did(e.seat, "bets", "bet")} ${e.amount}${tail}`);
+        else lines.push(`${did(e.seat, "raises", "raise")} to ${e.to}${tail}`);
         break;
       }
       case "uncalled_return":
         lines.push(`Uncalled bet of ${e.amount} returned to ${name(e.seat)}`);
         break;
       case "show":
-        lines.push(`${name(e.seat)} shows ${cards(e.hole)} — ${describeScore(e.score)}`);
+        lines.push(`${did(e.seat, "shows", "show")} ${cards(e.hole)} — ${describeScore(e.score)}`);
         break;
       case "muck":
-        lines.push(`${name(e.seat)} mucks`);
+        lines.push(`${did(e.seat, "mucks", "muck")}`);
         break;
       case "pot_award": {
         const total = state.result!.pots.length;
         const label = potNames(e.potIndex, total);
         const why = e.handScore !== null ? ` with ${describeScore(e.handScore)}` : e.eligible.length === 1 && !state.result!.showdown ? " (everyone else folded)" : "";
         if (e.winners.length === 1) {
-          lines.push(`${name(e.winners[0])} wins ${label}, ${e.amount}${why}`);
+          lines.push(`${did(e.winners[0], "wins", "win")} ${label}, ${e.amount}${why}`);
         } else {
           const split = e.awards.map((a) => `${name(a.seat)} ${a.amount}`).join(", ");
           lines.push(`${e.winners.map(name).join(" and ")} split ${label}, ${e.amount}${why}: ${split}`);

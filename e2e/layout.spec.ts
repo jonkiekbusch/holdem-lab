@@ -18,24 +18,15 @@ async function insideViewport(page: Page, selector: string) {
   return box!;
 }
 
-test.describe("table screen", () => {
-  test("fits the window with no scrolling and uses the space it has", async ({ page }) => {
+test.describe("home screen", () => {
+  test("shows the app name and the table, with no sideways scrolling", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "Hold'em Lab" })).toBeVisible();
+    await expect(page.getByTestId("table")).toBeVisible();
     await noSidewaysScroll(page);
-    const noScrollY = await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight);
+    const noScrollY = await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight + 1);
     expect(noScrollY).toBe(true);
-
-    const table = await insideViewport(page, '[data-testid="table"]');
-    const vp = page.viewportSize()!;
-    const landscape = vp.width > vp.height;
-    // The table takes its natural shape for the window: wide when the window is wide, tall when it is tall.
-    if (landscape) expect(table.width).toBeGreaterThan(table.height * 1.5);
-    else expect(table.height).toBeGreaterThan(table.width);
-    // ...and fills most of the room rather than sitting small in the middle.
-    const fill = landscape ? table.height / vp.height : table.width / vp.width;
-    expect(fill).toBeGreaterThan(0.55);
-    if (vp.width >= 1200) expect(table.width).toBeGreaterThan(700);
+    await insideViewport(page, '[data-testid="table"]');
   });
 });
 

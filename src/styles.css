@@ -67,70 +67,705 @@ input:focus-visible {
   outline-offset: 2px;
 }
 
-/* ---------- Main table screen ---------- */
+/* ---------- Game screen ---------- */
 
-.screen {
+.game {
   height: 100%;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
-.topbar {
+.game-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  padding: 10px var(--gutter);
+  padding: 6px 12px;
+  min-height: 46px;
+  border-bottom: 1px solid var(--panel-border);
 }
-
 .app-name {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   letter-spacing: 0.04em;
+  white-space: nowrap;
 }
-
-.top-link {
-  font-size: 0.9rem;
-}
-
-/* The area the table lives in. The table fills it as much as its shape allows:
-   tall and narrow on a phone held upright, wide and low on a laptop or a phone on its side. */
-.table-area {
+.bankroll {
   flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 16px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.bankroll strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.bankroll .up strong,
+.up {
+  color: #8fe3a9;
+}
+.bankroll .down strong,
+.down {
+  color: #ff9d9d;
+}
+.header-buttons {
+  display: flex;
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  .game-header {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+  .app-name {
+    flex: 1;
+  }
+  .bankroll {
+    order: 3;
+    flex: 1 0 100%;
+    flex-wrap: nowrap;
+    font-size: 0.78rem;
+    gap: 14px;
+    padding-bottom: 2px;
+  }
+}
+.btn.small {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 0.85rem;
+}
+
+/* Phones held upright (and any narrow window): table on top, your controls underneath, in thumb reach. */
+.game-main {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.stage-wrap {
+  min-width: 0;
   min-height: 0;
   container-type: size;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--gutter);
+  padding: 4px;
 }
 
-.table {
-  width: min(100cqw, 75cqh);
-  aspect-ratio: 3 / 4;
-  border-radius: 50% / 40%;
+.stage {
+  position: relative;
+  container-type: inline-size;
+  width: min(100cqw, 66cqh);
+  aspect-ratio: 66 / 100;
+  font-size: clamp(9px, 3.05cqw, 16px);
+  --rx: 40%;
+  --ry: 41%;
+}
+
+.felt {
+  position: absolute;
+  inset: 7% 4%;
+  border-radius: 999px;
   background: radial-gradient(ellipse at center, var(--felt-light), var(--felt) 75%);
-  border: 10px solid var(--rail);
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45);
+  border: 0.8em solid var(--rail);
+  box-shadow: inset 0 0 2.5em rgba(0, 0, 0, 0.5);
+}
+
+.center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7em;
+  width: 80%;
+}
+.pot {
+  font-size: 1.05em;
+  color: var(--text);
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 999px;
+  padding: 0.2em 0.9em;
+}
+.pot strong {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.uncalled {
+  color: var(--muted);
+  font-size: 0.85em;
+}
+.board {
+  display: flex;
+  gap: 0.4em;
+}
+
+/* Cards. Four colors: spades black, hearts red, diamonds blue, clubs green. */
+.card {
+  display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  border-radius: 0.35em;
+  flex: none;
+}
+.card.board {
+  width: 3.7em;
+  height: 5.3em;
+}
+.card.hole {
+  width: 4.1em;
+  height: 5.8em;
+}
+.card.mini {
+  width: 1.9em;
+  height: 2.7em;
+  border-radius: 0.25em;
+}
+.card.face {
+  background: #fdfdf8;
+  border: 1px solid #b9b9ae;
+  line-height: 1;
+  font-weight: 800;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+.card.face .rank {
+  font-size: 1.55em;
+}
+.card.face .suit {
+  font-size: 1.5em;
+}
+.card.mini .rank {
+  font-size: 0.95em;
+}
+.card.mini .suit {
+  font-size: 0.95em;
+}
+.card.spades {
+  color: #15151a;
+}
+.card.hearts {
+  color: #d3202a;
+}
+.card.diamonds {
+  color: #1d5fd0;
+}
+.card.clubs {
+  color: #12813a;
+}
+.card.back {
+  background: repeating-linear-gradient(45deg, #2a4f9c 0 0.35em, #22417f 0.35em 0.7em);
+  border: 2px solid #f1f1e6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+.card.slot {
+  border: 2px dashed rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.12);
 }
 
-@container (aspect-ratio > 1) {
-  .table {
-    width: min(100cqw, 190cqh);
-    aspect-ratio: 19 / 10;
-    border-radius: 999px;
+/* Seats sit on an ellipse, you at the bottom, clockwise from there. */
+.seat {
+  position: absolute;
+  left: calc(50% + var(--cos) * var(--rx));
+  top: calc(50% + var(--sin) * var(--ry));
+  transform: translate(-50%, -50%);
+}
+.plate {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  min-width: 8.6em;
+  padding: 0.45em 0.7em;
+  background: rgba(6, 30, 22, 0.94);
+  border: 2px solid var(--panel-border);
+  border-radius: 0.9em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.seat.hero .plate {
+  border-color: #c9a93e;
+}
+.who {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+.name {
+  font-weight: 700;
+  font-size: 1em;
+}
+.stack {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 0.95em;
+}
+.mini-cards {
+  display: flex;
+  gap: 0.15em;
+  margin-left: auto;
+}
+.seat.folded .plate {
+  opacity: 0.5;
+}
+.seat.winner .plate {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(242, 193, 78, 0.45), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.plate.thinking {
+  animation: think 1.1s ease-in-out infinite;
+  border-color: #fff;
+}
+@keyframes think {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 0 0.35em rgba(255, 255, 255, 0.55);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .plate.thinking {
+    animation: none;
+    box-shadow: 0 0 0 0.3em rgba(255, 255, 255, 0.55);
+  }
+}
+.badges {
+  position: absolute;
+  top: -0.75em;
+  right: 0.5em;
+  display: flex;
+  gap: 0.2em;
+}
+.badge {
+  font-size: 0.72em;
+  font-weight: 800;
+  line-height: 1;
+  padding: 0.25em 0.45em;
+  border-radius: 999px;
+  background: #e8efe9;
+  color: #0b2a20;
+}
+.badge.dealer {
+  background: #fff;
+  border: 2px solid #0b2a20;
+}
+.hero-cards {
+  position: absolute;
+  bottom: calc(100% + 0.35em);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.3em;
+}
+.hero-cards.dim {
+  opacity: 0.45;
+}
+.tag {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.85em;
+  font-weight: 600;
+  padding: 0.15em 0.6em;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+}
+.seat .tag {
+  top: calc(100% + 0.3em);
+}
+.seat.hero .tag {
+  top: 50%;
+  left: calc(100% + 0.5em);
+  transform: translateY(-50%);
+}
+.tag.fold-tag {
+  background: rgba(60, 20, 20, 0.85);
+  color: #ffd2d2;
+}
+.tag.win-tag {
+  background: var(--accent);
+  color: var(--accent-text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  white-space: normal;
+  text-align: center;
+  width: max-content;
+  max-width: 11em;
+  border-radius: 0.7em;
+  line-height: 1.2;
+}
+.win-hand {
+  font-size: 0.85em;
+  font-weight: 600;
+}
+/* Tags on the side seats line up with the seat's outer edge so they never run off the table. */
+.seat.left .tag {
+  left: 0;
+  transform: none;
+}
+.seat.right .tag {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+.seat.hero .tag {
+  left: calc(100% + 0.5em);
+  right: auto;
+  transform: translateY(-50%);
+}
+.bet {
+  --bf: 0.58;
+  position: absolute;
+  left: calc(50% + var(--cos) * var(--rx) * var(--bf));
+  top: calc(50% + var(--sin) * var(--ry) * var(--bf));
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-size: 0.95em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 999px;
+  padding: 0.15em 0.6em 0.15em 0.3em;
+}
+.bet.hero-bet {
+  --bf: 0.3;
+}
+.chip-icon {
+  width: 1.15em;
+  height: 1.15em;
+  border-radius: 50%;
+  background: radial-gradient(circle, #e9e0c2 0 28%, #c0392b 29% 100%);
+  border: 2px dashed #f4ecd0;
+  box-sizing: border-box;
+}
+
+/* Your controls */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px 12px;
+  background: #0a3427;
+  border-top: 1px solid var(--panel-border);
+  min-width: 0;
+}
+.status {
+  margin: 0;
+  min-height: 1.3em;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.result-lines {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: -4px;
+}
+.buttons {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr 1.35fr;
+  gap: 8px;
+}
+.btn.action {
+  position: relative;
+  min-height: 50px;
+  font-size: 1rem;
+  padding: 0 8px;
+}
+.btn.action.fold {
+  background: #6a2424;
+  border-color: #8f3636;
+}
+.btn.action.fold:hover {
+  background: #7d2c2c;
+}
+.btn.action.fold.armed {
+  outline: 3px solid #ffd2d2;
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.btn.action.primary:disabled {
+  background: var(--panel);
+  color: var(--text);
+  border-color: var(--panel-border);
+}
+kbd {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  font: 600 0.65rem/1 ui-monospace, Menlo, Consolas, monospace;
+  padding: 2px 4px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: inherit;
+  opacity: 0.75;
+}
+.btn.primary kbd {
+  border-color: rgba(0, 0, 0, 0.4);
+}
+@media (hover: none) {
+  kbd {
+    display: none;
   }
 }
 
-.table-note {
-  margin: 0;
-  color: var(--muted);
+.sizing {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.slider {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  accent-color: var(--accent);
+}
+.amount {
+  width: 5.2em;
+  min-height: 40px;
+  padding: 0 8px;
+  text-align: right;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  background: #07281e;
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.sizing.open .amount {
+  border-color: var(--accent);
+}
+.quick {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.quick-btn {
+  position: relative;
+  min-height: 46px;
+  padding: 4px 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.15;
+}
+.q-name {
+  font-size: 0.78rem;
+  opacity: 0.85;
+}
+.q-amount {
   font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+.quick-btn kbd {
+  top: auto;
+  bottom: 2px;
+  right: 3px;
+  font-size: 0.55rem;
+  padding: 1px 3px;
+}
+.quick-btn {
+  padding-bottom: 8px;
+}
+.hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.next {
+  display: flex;
+  gap: 8px;
+}
+.btn.wide {
+  flex: 1;
+  position: relative;
+}
+.panel-log {
+  display: none;
+}
+
+/* Wide windows (laptops, desktops, tablets on their side, phones on their side):
+   the table takes the left, and your controls, plus a live hand log, go in a side panel. */
+@media (min-width: 900px) and (min-aspect-ratio: 11/10) {
+  .game-main {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .stage {
+    width: min(100cqw, 190cqh);
+    aspect-ratio: 19 / 10;
+    font-size: clamp(9px, 1.5cqw, 25px);
+    --rx: 44%;
+    --ry: 39%;
+  }
+  .felt {
+    inset: 10% 5%;
+  }
+  .card.board {
+    width: 4.3em;
+    height: 6.1em;
+  }
+  .card.hole {
+    width: 4.6em;
+    height: 6.5em;
+  }
+  .card.mini {
+    width: 2.2em;
+    height: 3.1em;
+  }
+  .plate {
+    min-width: 9.6em;
+  }
+  .panel {
+    border-top: 0;
+    border-left: 1px solid var(--panel-border);
+    overflow-y: auto;
+    padding: 12px 14px;
+  }
+  .buttons {
+    grid-template-columns: 1fr 1fr;
+  }
+  .buttons .raise {
+    grid-column: 1 / -1;
+  }
+  .log-button {
+    display: none;
+  }
+  .panel-log {
+    display: block;
+    flex: 1;
+    min-height: 60px;
+    overflow: hidden;
+    border-top: 1px solid var(--panel-border);
+    padding-top: 6px;
+  }
+}
+
+/* Very short windows (a phone on its side): tighten everything so the controls still fit. */
+@media (max-height: 520px) {
+  .game-header {
+    min-height: 40px;
+    padding: 2px 10px;
+  }
+  .panel {
+    gap: 5px;
+    padding: 6px 10px;
+  }
+  .btn.action {
+    min-height: 40px;
+  }
+  .quick-btn {
+    min-height: 38px;
+  }
+  .panel-log,
+  .hint {
+    display: none;
+  }
+  .status {
+    font-size: 0.85rem;
+  }
+}
+
+.log-lines {
+  height: 100%;
+  overflow-y: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.log-lines .log-line {
+  margin: 0;
+}
+.modal-log {
+  height: 55vh;
+}
+
+/* Settings and log pop-ups */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  z-index: 10;
+}
+.modal {
+  width: min(520px, 100%);
+  max-height: 92dvh;
+  overflow-y: auto;
+  background: #0d3f31;
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 14px 16px 16px;
+  outline: none;
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.modal-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.setting {
+  border: 0;
+  padding: 0;
+  margin: 0 0 14px;
+}
+.setting legend {
+  font-weight: 700;
+  padding: 0;
+  margin-bottom: 6px;
+}
+.segments {
+  display: flex;
+  gap: 6px;
+}
+.segment {
+  flex: 1;
+}
+.segment.on {
+  background: var(--accent);
+  color: var(--accent-text);
+  border-color: var(--accent);
+  outline: none;
+}
+.note {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
 
 /* ---------- Watch page ---------- */

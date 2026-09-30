@@ -143,6 +143,8 @@ export interface LegalActions {
   currentBet: number;
   playerBet: number;
   stack: number;
+  /** A raise that would leave fewer than this many chips behind counts as all-in (see snapRaiseTo). */
+  snapBehind: number;
 }
 
 /**
@@ -342,7 +344,14 @@ export function legalActions(s: HandState): LegalActions | null {
     currentBet: s.currentBet,
     playerBet: p.bet,
     stack: p.stack,
+    snapBehind: ALL_IN_SNAP_BIG_BLINDS * s.config.bigBlind,
   };
+}
+
+/** What a chosen "raise to" amount really becomes: an all-in when it would leave only a sliver behind. */
+export function snapRaiseTo(legal: Pick<LegalActions, "maxRaiseTo" | "snapBehind">, to: number): number {
+  const behind = legal.maxRaiseTo - to;
+  return behind > 0 && behind < legal.snapBehind ? legal.maxRaiseTo : to;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -396,8 +405,7 @@ export function applyAction(state: HandState, action: Action): HandState {
       if (to < legal.minRaiseTo) throw new IllegalActionError(`Raise to at least ${legal.minRaiseTo}`);
       if (to > legal.maxRaiseTo) throw new IllegalActionError(`Raise to at most ${legal.maxRaiseTo}`);
       // Leaving only a sliver behind? Then it is an all-in.
-      const behind = legal.maxRaiseTo - to;
-      if (behind > 0 && behind < ALL_IN_SNAP_BIG_BLINDS * s.config.bigBlind) to = legal.maxRaiseTo;
+      to = snapRaiseTo(legal, to);
       const kind = s.currentBet === 0 ? "bet" : "raise";
       const full = isFull(to);
       const amount = to - p.bet;

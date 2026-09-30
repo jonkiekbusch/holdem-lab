@@ -94,7 +94,7 @@ describe("fair play: what a bot is allowed to see", () => {
 });
 
 describe("the engine and bots contain no screen code", () => {
-  const dirs = ["src/engine", "src/bots", "src/sim"];
+  const dirs = ["src/engine", "src/bots", "src/sim", "src/game"];
   const files = dirs.flatMap((d) => {
     try {
       return readdirSync(d)

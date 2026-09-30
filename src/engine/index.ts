@@ -5,3 +5,5 @@ export * from "./hand.ts";
 export * from "./table.ts";
 export * from "./view.ts";
 export * from "./log.ts";
+export * from "./project.ts";
+export * from "./record.ts";

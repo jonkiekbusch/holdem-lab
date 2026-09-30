@@ -5,7 +5,11 @@ Play-money, no-limit hold'em (6-max) against computer opponents that play like d
 - `SPEC.md` is the source of truth for what the app does.
 - `Build Plan.md` is the phased build plan and the list of decisions that override the spec.
 
-The rules engine and bots live in `src/engine`, `src/bots` and `src/sim` and contain no screen code. Screens live in `src/ui`. Open `#/watch` (the link on the home screen) to watch placeholder bots play.
+The rules engine and bots live in `src/engine`, `src/bots` and `src/sim`, and the session logic (pacing, bankroll, bet sizing, keyboard mapping) in `src/game`. None of those contain screen code. Screens live in `src/ui`. The home screen is the game; `#/watch` (linked from Settings) shows placeholder bots playing.
+
+Keys: **F** fold, **C** check/call, **R** raise (then **Enter** to confirm, **↑ ↓** to change the amount, **1-5** for quick sizes, **Esc** to cancel), **N** next hand. Every action also has a button.
+
+For testing, the address accepts options, e.g. `#/?seed=abc&speed=instant&gap=0&stack=40&hero=6` (fixed shuffles, no pauses, no wait between hands, 40bb stacks, start with 6 chips).
 
 ## Commands
 
