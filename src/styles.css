@@ -938,3 +938,29 @@ kbd {
     font-size: 0.95rem;
   }
 }
+
+/* Pot odds, shown small under the Call label */
+.btn.action.call {
+  flex-direction: column;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.15;
+}
+.odds {
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0.8;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  cursor: pointer;
+}
+.check input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+}

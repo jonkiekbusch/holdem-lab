@@ -12,9 +12,11 @@ export interface Settings {
   stackDepth: StackDepth;
   /** How long bots pause: Fast (short pauses, the default), Realistic (slower), Instant (none). */
   speed: Speed;
+  /** Show the share of the pot you must win to break even on a call, on the Call button. */
+  potOdds: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { stackDepth: 100, speed: "fast" };
+export const DEFAULT_SETTINGS: Settings = { stackDepth: 100, speed: "fast", potOdds: true };
 
 export const SMALL_BLIND = 1;
 export const BIG_BLIND = 2;

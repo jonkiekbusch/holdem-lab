@@ -23,7 +23,7 @@ describe("table options in the address", () => {
 
   it("uses the seed given, so the same address deals the same cards", () => {
     expect(make("seed=abc").seed).toBe("abc");
-    expect(make("seed=abc").getSnapshot().settings).toEqual({ stackDepth: 100, speed: "fast" });
+    expect(make("seed=abc").getSnapshot().settings).toEqual({ stackDepth: 100, speed: "fast", potOdds: true });
   });
 
   it("makes a different random seed each time when none is given", () => {

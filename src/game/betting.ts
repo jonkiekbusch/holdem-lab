@@ -55,6 +55,15 @@ export function raiseLabel(legal: LegalActions, to: number): string {
   return legal.currentBet === 0 ? `Bet ${to}` : `Raise to ${to}`;
 }
 
+/**
+ * Pot odds as a whole percent: the share of the final pot you must win for a call to break even,
+ * i.e. call / (pot + call). Null when there is nothing to call.
+ */
+export function potOddsPercent(legal: LegalActions): number | null {
+  if (legal.callAmount <= 0) return null;
+  return Math.round((100 * legal.callAmount) / (legal.pot + legal.callAmount));
+}
+
 export function checkCallLabel(legal: LegalActions): string {
   if (legal.canCheck) return "Check";
   return legal.callAmount >= legal.stack ? `Call ${legal.callAmount} (all-in)` : `Call ${legal.callAmount}`;

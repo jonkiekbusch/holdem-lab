@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { IllegalActionError, applyAction, legalActions, startHand, type HandState } from "../../src/engine/hand.ts";
 import { createRng } from "../../src/engine/rng.ts";
-import { checkCallLabel, clampRaiseTo, quickSizes, raiseLabel } from "../../src/game/betting.ts";
+import { checkCallLabel, clampRaiseTo, potOddsPercent, quickSizes, raiseLabel } from "../../src/game/betting.ts";
 import { commandForKey, type KeyContext } from "../../src/game/keys.ts";
 import { FAST_THINK_MAX_MS, FAST_THINK_MIN_MS, nextHandDelayMs, revealDelayMs, thinkTimeMs, type ThinkContext } from "../../src/game/pacing.ts";
 import { browserStore, loadSavedGame, saveGame, type KeyValueStore } from "../../src/game/storage.ts";
@@ -75,6 +75,37 @@ describe("quick-size buttons: the numbers", () => {
     expect(clampRaiseTo(l, 10_000)).toBe(l.maxRaiseTo);
     expect(clampRaiseTo(l, 7.6)).toBe(8);
     expect(clampRaiseTo(l, 199)).toBe(200); // near-all-in rule
+  });
+});
+
+describe("pot odds", () => {
+  it("is the call divided by the pot after calling, as a whole percent", () => {
+    // Blinds 1/2 with a raise to 6: the pot is 9 and it costs 6 to call, so 6 / 15 = 40%.
+    const s = play(scenario({ stacks: [200, 200, 200, 200, 200, 200] }), [[3, "raise", 6]]);
+    expect(legal(s).pot).toBe(9);
+    expect(potOddsPercent(legal(s))).toBe(40);
+  });
+
+  it.each([
+    [10, 10, 33], // a pot-sized bet into 10: the pot is now 20, calling 10 makes 30, so 10/30
+    [5, 10, 25], // a half-pot bet: pot 15, call 5, 5/20
+    [20, 10, 40], // a double-pot bet: pot 30, call 20, 20/50
+  ])("a bet of %i into a pot of %i needs %i%%", (bet, before, expected) => {
+    // The pot figure already includes the bet being faced.
+    expect(potOddsPercent({ callAmount: bet, pot: before + bet } as never)).toBe(expected);
+  });
+
+  it("is null when you can check", () => {
+    const s = play(scenario({ stacks: [200, 200] }), [[0, "call"], [1, "check"]]);
+    expect(potOddsPercent(legal(s))).toBeNull();
+  });
+
+  it("uses the capped call when you are short", () => {
+    // Seat 2 has only 18 chips behind, so its call (and its odds) are measured on 18
+    const t = play(scenario({ stacks: [200, 200, 20] }), [[0, "raise", 100], [1, "fold"]]);
+    const l = legal(t);
+    expect(l.callAmount).toBe(18);
+    expect(potOddsPercent(l)).toBe(Math.round((100 * 18) / (l.pot + 18)));
   });
 });
 
@@ -295,8 +326,8 @@ describe("saving to the device", () => {
 
   it("round-trips the bankroll and settings", () => {
     const store = memory();
-    saveGame(store, { version: 1, wallet: 9500, heroStack: 300, settings: { stackDepth: 200, speed: "realistic" } });
-    expect(loadSavedGame(store)).toEqual({ version: 1, wallet: 9500, heroStack: 300, settings: { stackDepth: 200, speed: "realistic" } });
+    saveGame(store, { version: 1, wallet: 9500, heroStack: 300, settings: { stackDepth: 200, speed: "realistic", potOdds: false } });
+    expect(loadSavedGame(store)).toEqual({ version: 1, wallet: 9500, heroStack: 300, settings: { stackDepth: 200, speed: "realistic", potOdds: false } });
   });
 
   it("returns null when nothing is saved, or the data is junk", () => {
@@ -311,7 +342,7 @@ describe("saving to the device", () => {
   it("falls back to default settings when saved ones are invalid", () => {
     const store = memory();
     store.data.set("holdem-lab:game", JSON.stringify({ version: 1, wallet: 10, heroStack: 20, settings: { stackDepth: 55, speed: "warp" } }));
-    expect(loadSavedGame(store)!.settings).toEqual({ stackDepth: 100, speed: "fast" });
+    expect(loadSavedGame(store)!.settings).toEqual({ stackDepth: 100, speed: "fast", potOdds: true });
   });
 
   it("survives a browser that blocks storage", () => {
@@ -324,8 +355,8 @@ describe("saving to the device", () => {
       },
     };
     expect(loadSavedGame(blocked)).toBeNull();
-    expect(() => saveGame(blocked, { version: 1, wallet: 1, heroStack: 1, settings: { stackDepth: 100, speed: "fast" } })).not.toThrow();
-    expect(() => saveGame(null, { version: 1, wallet: 1, heroStack: 1, settings: { stackDepth: 100, speed: "fast" } })).not.toThrow();
+    expect(() => saveGame(blocked, { version: 1, wallet: 1, heroStack: 1, settings: { stackDepth: 100, speed: "fast", potOdds: true } })).not.toThrow();
+    expect(() => saveGame(null, { version: 1, wallet: 1, heroStack: 1, settings: { stackDepth: 100, speed: "fast", potOdds: true } })).not.toThrow();
     expect(loadSavedGame(null)).toBeNull();
     expect(browserStore()).toBeNull(); // no localStorage in the test environment
   });

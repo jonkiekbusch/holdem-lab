@@ -43,6 +43,7 @@ export function loadSavedGame(store: KeyValueStore | null): SavedGame | null {
       settings: {
         stackDepth: isStackDepth(data.settings?.stackDepth) ? data.settings.stackDepth : DEFAULT_SETTINGS.stackDepth,
         speed: isSpeed(data.settings?.speed) ? data.settings.speed : DEFAULT_SETTINGS.speed,
+        potOdds: typeof data.settings?.potOdds === "boolean" ? data.settings.potOdds : DEFAULT_SETTINGS.potOdds,
       },
     };
   } catch {

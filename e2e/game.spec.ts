@@ -472,6 +472,71 @@ test.describe("the speed setting", () => {
   });
 });
 
+test.describe("pot odds on the Call button", () => {
+  /** Plays on until the Call button has a price (not "Check"). */
+  async function untilFacingBet(page: Page): Promise<void> {
+    for (let i = 0; i < 40; i++) {
+      await waitForTurn(page);
+      if (!((await page.getByTestId("btn-checkcall").textContent()) ?? "").startsWith("Check")) return;
+      await page.getByTestId("btn-checkcall").click();
+    }
+    throw new Error("Never faced a bet");
+  }
+
+  test("is on by default, small, and shows the share of the pot you need", async ({ page }) => {
+    await page.goto(HOLD);
+    await untilFacingBet(page);
+    const odds = page.getByTestId("pot-odds");
+    await expect(odds).toBeVisible();
+    await expect(odds).toHaveText(/^needs \d{1,3}%$/);
+    // It is small and sits inside the button without making it grow.
+    const call = (await page.getByTestId("btn-checkcall").boundingBox())!;
+    const o = (await odds.boundingBox())!;
+    expect(o.y).toBeGreaterThanOrEqual(call.y);
+    expect(o.y + o.height).toBeLessThanOrEqual(call.y + call.height);
+    expect(call.height).toBeLessThan(80);
+    // The number matches the call and the pot shown in the status line and pot label.
+    const status = (await page.getByTestId("status").textContent()) ?? "";
+    const toCall = Number(/(\d+) to call/.exec(status)?.[1]);
+    const pot = Number(((await page.getByTestId("pot").textContent()) ?? "").replace(/[^\d]/g, ""));
+    expect(toCall).toBeGreaterThan(0);
+    const shown = Number(/(\d+)%/.exec((await odds.textContent())!)![1]);
+    expect(Math.abs(shown - (100 * toCall) / (pot + toCall))).toBeLessThanOrEqual(1);
+  });
+
+  test("is not shown when checking is free", async ({ page }) => {
+    await page.goto(HOLD);
+    for (let i = 0; i < 40; i++) {
+      await waitForTurn(page);
+      if (((await page.getByTestId("btn-checkcall").textContent()) ?? "").startsWith("Check")) break;
+      await page.getByTestId("btn-checkcall").click();
+    }
+    await expect(page.getByTestId("btn-checkcall")).toContainText("Check");
+    await expect(page.getByTestId("pot-odds")).toHaveCount(0);
+  });
+
+  test("can be switched off in Settings, and stays off after a reload", async ({ page }) => {
+    await page.goto("/#/?seed=e2e&speed=instant&gap=999999");
+    await untilFacingBet(page);
+    await page.getByTestId("settings-button").click();
+    await expect(page.getByTestId("pot-odds-toggle")).toBeChecked();
+    await page.getByTestId("pot-odds-toggle").uncheck();
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("pot-odds")).toHaveCount(0);
+    await page.reload();
+    await page.getByTestId("settings-button").click();
+    await expect(page.getByTestId("pot-odds-toggle")).not.toBeChecked();
+    await page.keyboard.press("Escape");
+    await untilFacingBet(page);
+    await expect(page.getByTestId("pot-odds")).toHaveCount(0);
+    // and back on again
+    await page.getByTestId("settings-button").click();
+    await page.getByTestId("pot-odds-toggle").check();
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("pot-odds")).toBeVisible();
+  });
+});
+
 test.describe("the hand log", () => {
   test("is in the side panel on wide windows and behind the Log button on narrow ones", async ({ page }) => {
     await page.goto(HOLD);

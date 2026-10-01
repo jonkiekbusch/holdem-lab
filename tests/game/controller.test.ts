@@ -69,7 +69,7 @@ describe("starting a session", () => {
     expect(s.wallet).toBe(9800);
     expect(s.sessionNet).toBe(0);
     expect(s.display).toBeNull();
-    expect(s.settings).toEqual({ stackDepth: 100, speed: "fast" });
+    expect(s.settings).toEqual({ stackDepth: 100, speed: "fast", potOdds: true });
   });
 
   it("deals the first hand, shows your two cards, and never anyone else's", () => {
@@ -286,7 +286,7 @@ describe("bankroll, buy-ins and rebuys", () => {
 
     const second = new GameController({ seed: "later", store, scheduler: new ManualScheduler() });
     const s2 = second.getSnapshot();
-    expect(s2.settings).toEqual({ stackDepth: 40, speed: "instant" });
+    expect(s2.settings).toEqual({ stackDepth: 40, speed: "instant", potOdds: true });
     expect(s2.wallet).toBe(s1.wallet);
     expect(s2.heroStack).toBe(s1.heroStack);
   });

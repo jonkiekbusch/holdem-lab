@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { Card } from "../engine/cards.ts";
 import type { DisplaySeat } from "../engine/project.ts";
-import { checkCallLabel, clampRaiseTo, quickSizes, raiseLabel } from "../game/betting.ts";
+import { checkCallLabel, clampRaiseTo, potOddsPercent, quickSizes, raiseLabel } from "../game/betting.ts";
 import { HERO_SEAT, SEAT_NAMES, type GameController, type GameSnapshot } from "../game/controller.ts";
 import { commandForKey, type Command } from "../game/keys.ts";
 import { SPEED_LABELS, SPEEDS, STACK_DEPTHS, STARTING_BANKROLL, type Speed, type StackDepth } from "../game/settings.ts";
@@ -244,6 +244,11 @@ export function GamePage({ params }: { params: URLSearchParams }) {
             </button>
             <button type="button" class="btn action call" data-testid="btn-checkcall" disabled={!legal} onClick={doCheckCall}>
               {legal ? checkCallLabel(legal) : "Check / Call"}
+              {snap.settings.potOdds && legal && potOddsPercent(legal) !== null && (
+                <small class="odds" data-testid="pot-odds" title="The share of the pot you need to win for this call to break even">
+                  needs {potOddsPercent(legal)}%
+                </small>
+              )}
               <kbd aria-hidden="true">C</kbd>
             </button>
             <button type="button" class="btn action raise primary" data-testid="btn-raise" disabled={!legal || !legal.canRaise} onClick={doRaise}>
@@ -358,6 +363,7 @@ export function GamePage({ params }: { params: URLSearchParams }) {
           }}
           onSpeed={(speed) => ctrl.setSettings({ speed })}
           onDepth={(stackDepth) => ctrl.setSettings({ stackDepth })}
+          onPotOdds={(potOdds) => ctrl.setSettings({ potOdds })}
           onReset={() => {
             if (!confirmReset) return setConfirmReset(true);
             setConfirmReset(false);
@@ -516,6 +522,7 @@ function SettingsDialog(props: {
   onClose: () => void;
   onSpeed: (s: Speed) => void;
   onDepth: (d: StackDepth) => void;
+  onPotOdds: (on: boolean) => void;
   onReset: () => void;
 }) {
   const { snap } = props;
@@ -560,6 +567,20 @@ function SettingsDialog(props: {
           ))}
         </div>
         <p class="note">Fast (the default) gives short pauses. Realistic is slower. Instant has no pauses.</p>
+      </fieldset>
+
+      <fieldset class="setting">
+        <legend>Pot odds</legend>
+        <label class="check">
+          <input
+            type="checkbox"
+            data-testid="pot-odds-toggle"
+            checked={snap.settings.potOdds}
+            onChange={(e) => props.onPotOdds((e.target as HTMLInputElement).checked)}
+          />
+          Show pot odds on the Call button
+        </label>
+        <p class="note">For example "needs 25%": you must win at least that share of the time for the call to pay off. It is the call divided by the pot after you call.</p>
       </fieldset>
 
       <fieldset class="setting">
